@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voice Emotion Tracker</title>
+    <style>
+        body {
+            background-color: #f3e8ff;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        h1 {
+            color: #7c3aed;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #a78bfa;
+            border: none;
+            padding: 12px 20px;
+            color: white;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #7c3aed;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            font-size: 100px;
+            opacity: 0;
+            right: 0;
+            top: 0;
+            cursor: pointer;
+        }
+
+        .file-upload-btn {
+            background-color: #a78bfa;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .file-upload-btn:hover {
+            background-color: #7c3aed;
+        }
+
+        .result {
+            margin-top: 30px;
+            background-color: #ede9fe;
+            padding: 20px;
+            border-radius: 10px;
+            color: #4c1d95;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .emoji {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        p {
+            color: #6b21a8;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice Emotion Tracker</h1>
+
+        <form method="POST" enctype="multipart/form-data">
+            <button type="submit" name="record">🎙️ Record Voice</button>
+            <p>OR</p>
+            <div class="file-upload">
+                <label class="file-upload-btn">
+                    📁 Choose WAV File
+                    <input type="file" name="file" accept=".wav" onchange="this.form.submit()">
+                </label>
+            </div>
+        </form>
+
+        {% if emotion %}
+            <div class="result">
+                <div class="emoji">
+                    {% if emotion.lower() == "happy" %}
+                        😄
+                    {% elif emotion.lower() == "sad" %}
+                        😢
+                    {% elif emotion.lower() == "angry" %}
+                        😠
+                    {% elif emotion.lower() == "neutral" %}
+                        😐
+                    {% elif emotion.lower() == "stress" %}
+                        😣
+                    {% else %}
+                        🤔
+                    {% endif %}
+                </div>
+                <div>Predicted Emotion: <strong>{{ emotion }}</strong></div>
+                <img src="{{ url_for('static', filename='waveform.png') }}" alt="Waveform" style="margin-top: 20px; width: 100%; border-radius: 10px;">
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>
