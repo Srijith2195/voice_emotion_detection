@@ -1,137 +1,101 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Voice Emotion Tracker</title>
-    <style>
-        body {
-            background-color: #f3e8ff;
-            font-family: 'Segoe UI', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-
-        .container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 90%;
-            max-width: 400px;
-        }
-
-        h1 {
-            color: #7c3aed;
-            margin-bottom: 20px;
-        }
-
-        button {
-            background-color: #a78bfa;
-            border: none;
-            padding: 12px 20px;
-            color: white;
-            font-size: 16px;
-            border-radius: 10px;
-            cursor: pointer;
-            margin: 10px 0;
-            transition: background-color 0.3s;
-        }
-
-        button:hover {
-            background-color: #7c3aed;
-        }
-
-        .file-upload {
-            position: relative;
-            display: inline-block;
-            margin-top: 10px;
-        }
-
-        .file-upload input[type="file"] {
-            position: absolute;
-            font-size: 100px;
-            opacity: 0;
-            right: 0;
-            top: 0;
-            cursor: pointer;
-        }
-
-        .file-upload-btn {
-            background-color: #a78bfa;
-            color: white;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .file-upload-btn:hover {
-            background-color: #7c3aed;
-        }
-
-        .result {
-            margin-top: 30px;
-            background-color: #ede9fe;
-            padding: 20px;
-            border-radius: 10px;
-            color: #4c1d95;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .emoji {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-
-        p {
-            color: #6b21a8;
-            font-weight: 500;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>🎤 Voice Emotion Tracker</h1>
-
-        <form method="POST" enctype="multipart/form-data">
-            <button type="submit" name="record">🎙️ Record Voice</button>
-            <p>OR</p>
-            <div class="file-upload">
-                <label class="file-upload-btn">
-                    📁 Choose WAV File
-                    <input type="file" name="file" accept=".wav" onchange="this.form.submit()">
-                </label>
-            </div>
-        </form>
-
-        {% if emotion %}
-            <div class="result">
-                <div class="emoji">
-                    {% if emotion.lower() == "happy" %}
-                        😄
-                    {% elif emotion.lower() == "sad" %}
-                        😢
-                    {% elif emotion.lower() == "angry" %}
-                        😠
-                    {% elif emotion.lower() == "neutral" %}
-                        😐
-                    {% elif emotion.lower() == "stress" %}
-                        😣
-                    {% else %}
-                        🤔
+{% extends 'base.html' %}
+{% block title %}Home | Voice Emotion Tracker{% endblock %}
+{% block content %}
+<style>
+#loadingOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.7);
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+<div id="loadingOverlay">
+    <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+</div>
+<div class="container-fluid px-0">
+    <h2 class="mb-4" style="color:#7c3aed;font-weight:600;">Welcome to the Voice Emotion Tracker Dashboard</h2>
+    <div class="row">
+        <div class="col-lg-7 col-md-10 col-12 mx-auto">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="predictForm">
+                        <button type="submit" name="record" class="btn btn-primary mb-3">
+                            <i class="bi bi-mic"></i> Record Voice
+                        </button>
+                        <span class="mx-2 text-muted">or</span>
+                        <label class="btn btn-outline-secondary mb-3">
+                            <i class="bi bi-upload"></i> Choose WAV File
+                            <input type="file" name="file" accept=".wav" onchange="this.form.submit()" hidden>
+                        </label>
+                    </form>
+                    {% if transcription %}
+                        <div class="alert alert-info mt-4" style="word-break:break-word;">
+                            <strong>Transcription:</strong><br>
+                            {{ transcription }}
+                        </div>
+                    {% endif %}
+                    {% if audio_filename %}
+                        <div class="mt-3 mb-2">
+                            <audio controls style="width:100%;max-width:320px;">
+                                <source src="{{ url_for('audio', filename=audio_filename) }}" type="audio/wav">
+                                Your browser does not support the audio element.
+                            </audio>
+                        </div>
+                        {% if audio_props %}
+                        <div class="mt-1 mb-2 text-muted small" style="font-size: 0.98em;">
+                            <strong>Audio Info:</strong>
+                            {{ audio_props.format }},
+                            {{ audio_props.channels }} channel{{ 's' if audio_props.channels > 1 else '' }},
+                            {{ audio_props.sample_rate }} Hz,
+                            {{ audio_props.duration }} sec
+                        </div>
+                        {% endif %}
+                    {% endif %}
+                    {% if emotion %}
+                        <div class="alert mt-4" style="background:linear-gradient(135deg,#ede9fe,#f3e8ff);color:#4c1d95;">
+                            <div class="d-flex align-items-center mb-2">
+                                {% if emotion.lower() == "happy" %}
+                                    <span class="me-2" style="font-size:2rem;">😄</span>
+                                {% elif emotion.lower() == "sad" %}
+                                    <span class="me-2" style="font-size:2rem;">😢</span>
+                                {% elif emotion.lower() == "angry" %}
+                                    <span class="me-2" style="font-size:2rem;">😠</span>
+                                {% elif emotion.lower() == "neutral" %}
+                                    <span class="me-2" style="font-size:2rem;">😐</span>
+                                {% elif emotion.lower() == "stress" %}
+                                    <span class="me-2" style="font-size:2rem;">😣</span>
+                                {% else %}
+                                    <span class="me-2" style="font-size:2rem;">🤔</span>
+                                {% endif %}
+                                <span class="fw-bold">Predicted Emotion: {{ emotion }}</span>
+                            </div>
+                            <img src="{{ url_for('static', filename='waveform.png') }}" alt="Waveform visualization of your voice" class="img-fluid rounded shadow-sm mt-2" style="max-width:320px;">
+                        </div>
                     {% endif %}
                 </div>
-                <div>Predicted Emotion: <strong>{{ emotion }}</strong></div>
-                <img src="{{ url_for('static', filename='waveform.png') }}" alt="Waveform" style="margin-top: 20px; width: 100%; border-radius: 10px;">
             </div>
-        {% endif %}
+        </div>
     </div>
-</body>
-</html>
+</div>
+<script>
+// Show loading spinner on form submit
+const form = document.getElementById('predictForm');
+if (form) {
+    form.addEventListener('submit', function() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    });
+}
+// Also show spinner if file input triggers submit
+const fileInput = form.querySelector('input[type="file"]');
+if (fileInput) {
+    fileInput.addEventListener('change', function() {
+        document.getElementById('loadingOverlay').style.display = 'flex';
+    });
+}
+</script>
+{% endblock %}

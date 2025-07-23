@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}History | Voice Emotion Tracker{% endblock %}
+{% block content %}
+<h2 class="mb-4" style="color:#7c3aed;font-weight:600;">Analysis History</h2>
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% if history and history|length > 0 %}
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>File Name</th>
+                    <th>Emotion</th>
+                    <th>Transcription</th>
+                    <th>Audio</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in history %}
+                <tr>
+                    <td>{{ record.datetime }}</td>
+                    <td>{{ record.filename }}</td>
+                    <td>{{ record.emotion }}</td>
+                    <td style="max-width:200px;word-break:break-word;">{{ record.transcription }}</td>
+                    <td>
+                        <audio controls style="width:120px;">
+                            <source src="{{ url_for('audio', filename=record.filename) }}" type="audio/wav">
+                        </audio>
+                        <a href="{{ url_for('audio', filename=record.filename) }}" download class="btn btn-sm btn-outline-primary ms-2"><i class="bi bi-download"></i></a>
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('delete_history', index=loop.index0) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="text-muted small">No history yet. Your analyses will appear here.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

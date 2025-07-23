@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Analytics | Voice Emotion Tracker{% endblock %}
+{% block content %}
+<h2 class="mb-4" style="color:#7c3aed;font-weight:600;">Analytics</h2>
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <h5>Emotion Distribution</h5>
+        <div class="my-3 mx-auto" style="max-width:320px; height:180px;">
+            <canvas id="emotionChart" style="width:100%;height:100%;"></canvas>
+            <div class="text-muted" id="noDataMsg" style="display:none;">(No data available.)</div>
+        </div>
+        <h5 class="mt-4">Trends Over Time</h5>
+        <div class="my-3" style="min-height:220px;">
+            <!-- Chart.js or similar chart will be rendered here -->
+            <div class="text-muted">(Trends will appear here when data is available.)</div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const emotionCounts = {{ emotion_counts|tojson }};
+const labels = Object.keys(emotionCounts);
+const data = Object.values(emotionCounts);
+if (labels.length > 0) {
+    new Chart(document.getElementById('emotionChart'), {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: [
+                    '#7c3aed', '#a78bfa', '#facc15', '#22c55e', '#ef4444', '#0ea5e9', '#a3a3a3', '#f59e42', '#ede9fe'
+                ],
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+} else {
+    document.getElementById('emotionChart').style.display = 'none';
+    document.getElementById('noDataMsg').style.display = 'block';
+}
+</script>
+{% endblock %} 
