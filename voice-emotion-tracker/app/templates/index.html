@@ -23,6 +23,118 @@
         <div class="col-lg-7 col-md-10 col-12 mx-auto">
             <div class="card shadow-sm mb-4">
                 <div class="card-body">
+                    <select id="micSelect" class="form-select mb-3" style="max-width:300px;"></select>
+                    <div class="mb-3">
+                        <button id="startRecordBtn" class="btn btn-success">Start Recording</button>
+                        <button id="stopRecordBtn" class="btn btn-danger" disabled>Stop Recording</button>
+                        <span id="recordingStatus" class="mx-2 text-muted"></span>
+                    </div>
+                    <form id="uploadRecordedForm" method="POST" enctype="multipart/form-data" style="display:none;">
+                        <input type="file" id="recordedAudioFile" name="file" accept=".wav" style="display:none;">
+                    </form>
+                    <select id="micSelect" class="form-select mb-3" style="max-width:300px;"></select>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let mediaRecorder;
+    let audioChunks = [];
+    let selectedDeviceId = null;
+
+    const micSelect = document.getElementById('micSelect');
+    const startBtn = document.getElementById('startRecordBtn');
+    const stopBtn = document.getElementById('stopRecordBtn');
+    const statusSpan = document.getElementById('recordingStatus');
+    const uploadForm = document.getElementById('uploadRecordedForm');
+    const fileInput = document.getElementById('recordedAudioFile');
+
+    // 1. Populate microphone selection dropdown
+    navigator.mediaDevices.enumerateDevices().then(devices => {
+        const mics = devices.filter(device => device.kind === 'audioinput');
+        mics.forEach(mic => {
+            const option = document.createElement('option');
+            option.value = mic.deviceId;
+            option.textContent = mic.label || `Mic ${micSelect.length + 1}`;
+            micSelect.appendChild(option);
+        });
+        if (mics.length > 0) {
+            selectedDeviceId = mics[0].deviceId;
+        }
+    });
+
+    micSelect.addEventListener('change', function () {
+        selectedDeviceId = this.value;
+    });
+
+    // 2. Start recording
+    startBtn.addEventListener('click', async function (e) {
+        e.preventDefault();
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert('Your browser does not support audio recording.');
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    sampleRate: 44100,
+                    channelCount: 1
+                }
+            });
+
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = event => {
+                if (event.data.size > 0) {
+                    audioChunks.push(event.data);
+                }
+            };
+
+            mediaRecorder.onstop = async () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+
+                // Playback directly
+                const audioURL = URL.createObjectURL(audioBlob);
+                const playbackAudio = document.createElement('audio');
+                playbackAudio.src = audioURL;
+                playbackAudio.controls = true;
+                playbackAudio.style.marginTop = '10px';
+                document.querySelector('.card-body').appendChild(playbackAudio);
+
+                // Auto-upload
+                const file = new File([audioBlob], 'recorded.wav', { type: 'audio/wav' });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                uploadForm.style.display = 'block';
+                uploadForm.submit();
+            };
+
+            mediaRecorder.start();
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusSpan.textContent = 'Recording...';
+
+        } catch (err) {
+            alert('Error starting recording: ' + err.message);
+        }
+    });
+
+    // 3. Stop recording
+    stopBtn.addEventListener('click', function (e) {
+        e.preventDefault();
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            statusSpan.textContent = 'Processing recording...';
+        }
+    });
+});
+</script>
+
                     <form method="POST" enctype="multipart/form-data" id="predictForm">
                         <button type="submit" name="record" class="btn btn-primary mb-3">
                             <i class="bi bi-mic"></i> Record Voice
@@ -91,9 +203,9 @@ if (form) {
     });
 }
 // Also show spinner if file input triggers submit
-const fileInput = form.querySelector('input[type="file"]');
-if (fileInput) {
-    fileInput.addEventListener('change', function() {
+const fileInput2 = form.querySelector('input[type="file"]');
+if (fileInput2) {
+    fileInput2.addEventListener('change', function() {
         document.getElementById('loadingOverlay').style.display = 'flex';
     });
 }

@@ -11,14 +11,17 @@ from scipy.io import wavfile
 import shutil
 import uuid
 
-# 👇 Tell Flask where to find templates
+#  Tell Flask where to find templates
 app = Flask(__name__, template_folder="app/templates")
 
-# 👇 Load your trained model
+# Load your trained model
 model = joblib.load(os.path.join("model", "emotion_model.pkl"))
 HISTORY_FILE = "history.json"
 AUDIO_DIR = os.path.join("static", "audio")
 os.makedirs(AUDIO_DIR, exist_ok=True)
+
+UPLOAD_FOLDER = os.path.join('data', 'user_uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 def get_audio_properties(filepath):
     try:
@@ -56,7 +59,8 @@ def index():
         elif "file" in request.files:
             f = request.files["file"]
             if f and f.filename.endswith(".wav"):
-                f.save("input.wav")
+                save_path = os.path.join(UPLOAD_FOLDER, f.filename)
+                f.save(save_path)
                 plot_waveform("input.wav")
                 features = extract_features("input.wav")
                 shutil.copy("input.wav", audio_path)
