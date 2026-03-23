@@ -11,10 +11,10 @@ from scipy.io import wavfile
 import shutil
 import uuid
 
-# 👇 Tell Flask where to find templates
+#  Tell Flask where to find templates
 app = Flask(__name__, template_folder="app/templates")
 
-# 👇 Load your trained model
+# Load your trained model
 model = joblib.load(os.path.join("model", "emotion_model.pkl"))
 HISTORY_FILE = "history.json"
 AUDIO_DIR = os.path.join("static", "audio")

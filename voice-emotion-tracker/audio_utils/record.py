@@ -1,7 +1,7 @@
 import sounddevice as sd
 from scipy.io.wavfile import write
 
-def record_voice(filename="input.wav", duration=3, fs=44100):
+def record_voice(filename="input.wav", duration=10, fs=44100):  # ⏱️ Updated to 10 seconds
     try:
         print("Available audio devices:")
         devices = sd.query_devices()
@@ -13,7 +13,7 @@ def record_voice(filename="input.wav", duration=3, fs=44100):
         device_info = sd.query_devices(kind='input')
         print(f"\nUsing default input device: {device_info['name']}")
 
-        print("Recording...")
+        print(f"Recording for {duration} seconds...")
         audio = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16', device=device_info['index'])
         sd.wait()
         write(filename, fs, audio)
