@@ -23,3 +23,4 @@ def plot_waveform(file_path, save_path="static/waveform.png"):
         plt.close()
     except Exception as e:
         print(f"Waveform plot failed: {e}")
+                                                                                                                                
